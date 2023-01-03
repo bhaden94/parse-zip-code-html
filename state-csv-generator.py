@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 import os
+import csv
 
 # Creates the soup to query HTML doc with
 def create_soup(file_name):
@@ -54,8 +55,23 @@ def generate_county_list(soup):
 # This wil only fill in Zip Code and County and State
 # Entitlement column will be done manually in Excel
 def create_csv(zip_codes, counties, state):
-    print("in create_csv")
+    if len(zip_codes) != len(counties):
+        raise ValueError("The zip_codes and counties array are of different lengths.")
 
+    # Open a file for writing
+    with open(f'csv-data/{state}.csv', 'w', newline='') as csvfile:
+        # Create a csv writer
+        writer = csv.writer(csvfile)
+
+        # Write the headers
+        writer.writerow(['Zip Code', 'County', 'State', 'Entitlement'])
+
+        # Write the data
+        for i in range(len(zip_codes)):
+            writer.writerow([zip_codes[i], counties[i], state, ''])
+
+
+# Used as as test function for empty values
 def find_matching_zip_and_county(zip_codes, counties, zip_to_find):
     index = zip_codes.index(zip_to_find)
     print(zip_to_find, index)
@@ -72,12 +88,14 @@ file_names = os.listdir(folder_path)
 for file_name in file_names:
     # Construct the full path to the file
     file_path = os.path.join(folder_path, file_name)
+    root, ext = os.path.splitext(file_name)
 
     # Check if the file is a regular file (not a directory or a special file)
     if os.path.isfile(file_path):
         S = create_soup(file_path)
         zip_codes = generate_zip_code_list(S)
         counties = generate_county_list(S)
-        find_matching_zip_and_county(zip_codes, counties, "31144")
+        create_csv(zip_codes, counties, root)
+        # find_matching_zip_and_county(zip_codes, counties, "31144")
         # print(len(generate_zip_code_list(S)))
         # print(len(generate_county_list(S)))
